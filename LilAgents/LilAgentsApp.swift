@@ -61,6 +61,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         providerItem.submenu = providerMenu
         menu.addItem(providerItem)
 
+        let geminiModelItem = NSMenuItem(title: "Gemini Model", action: nil, keyEquivalent: "")
+        let geminiModelMenu = NSMenu()
+        for (i, model) in GeminiModel.allCases.enumerated() {
+            let item = NSMenuItem(title: model.displayName, action: #selector(switchGeminiModel(_:)), keyEquivalent: "")
+            item.tag = i
+            item.state = model == GeminiModelSettings.current ? .on : .off
+            geminiModelMenu.addItem(item)
+        }
+        geminiModelItem.submenu = geminiModelMenu
+        menu.addItem(geminiModelItem)
+
         // Theme submenu
         let themeItem = NSMenuItem(title: "Style", action: nil, keyEquivalent: "")
         let themeMenu = NSMenu()
@@ -180,6 +191,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             char.thinkingBubbleWindow?.orderOut(nil)
             char.thinkingBubbleWindow = nil
         }
+    }
+
+    @objc func switchGeminiModel(_ sender: NSMenuItem) {
+        let idx = sender.tag
+        let allModels = GeminiModel.allCases
+        guard idx < allModels.count else { return }
+        GeminiModelSettings.current = allModels[idx]
+
+        if let modelMenu = sender.menu {
+            for item in modelMenu.items {
+                item.state = item.tag == idx ? .on : .off
+            }
+        }
+
+        resetSessionsForWorkspaceChange()
     }
 
     @objc func switchDisplay(_ sender: NSMenuItem) {

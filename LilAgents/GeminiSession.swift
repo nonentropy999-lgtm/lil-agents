@@ -74,9 +74,21 @@ class GeminiSession: AgentSession {
 
         // Current Gemini CLI uses --resume instead of the older --continue flag.
         // stream-json keeps the app parsing stable across newer CLI versions.
-        var args: [String] = ["--yolo", "--output-format", "stream-json", "--prompt", message]
+        let selectedModel = GeminiModelSettings.current
+        var args: [String] = [
+            "--yolo",
+            "--model", selectedModel.rawValue,
+            "--output-format", "stream-json",
+            "--prompt", message
+        ]
         if !isFirstTurn {
-            args = ["--yolo", "--resume", "latest", "--output-format", "stream-json", "--prompt", message]
+            args = [
+                "--yolo",
+                "--resume", "latest",
+                "--model", selectedModel.rawValue,
+                "--output-format", "stream-json",
+                "--prompt", message
+            ]
         }
         proc.arguments = args
         DebugLog.write("GeminiSession.args=\(args.joined(separator: " "))")
