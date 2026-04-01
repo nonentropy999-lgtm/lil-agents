@@ -54,15 +54,16 @@ class GeminiSession: AgentSession {
         isBusy = true
         history.append(AgentMessage(role: .user, text: message))
         lineBuffer = ""
+        didReceiveJsonLine = false
 
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: binaryPath)
 
-        // gemini --yolo -p "message" for agentic use
-        // --continue for subsequent turns (if supported by installed version)
-        var args: [String] = ["--yolo", "-p", message]
+        // Current Gemini CLI uses --resume instead of the older --continue flag.
+        // stream-json keeps the app parsing stable across newer CLI versions.
+        var args: [String] = ["--yolo", "--output-format", "stream-json", "--prompt", message]
         if !isFirstTurn {
-            args = ["--yolo", "--continue", "-p", message]
+            args = ["--yolo", "--resume", "latest", "--output-format", "stream-json", "--prompt", message]
         }
         proc.arguments = args
 
@@ -85,7 +86,7 @@ class GeminiSession: AgentSession {
                 self.process = nil
 
                 let text = collectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !text.isEmpty && self.isBusy {
+                if !text.isEmpty && self.isBusy && !self.didReceiveJsonLine {
                     // If we got text that wasn't streamed yet (non-streaming fallback)
                     let alreadyStreamed = self.history.last?.role == .assistant
                     if !alreadyStreamed {
@@ -198,8 +199,9 @@ class GeminiSession: AgentSession {
 
         switch type {
         case "content", "text", "delta", "message":
+            let role = data["role"] as? String ?? json["role"] as? String ?? "assistant"
             let text = data["text"] as? String ?? data["content"] as? String ?? json["text"] as? String ?? ""
-            if !text.isEmpty {
+            if role == "assistant", !text.isEmpty {
                 onText?(text)
             }
 
@@ -216,7 +218,7 @@ class GeminiSession: AgentSession {
             history.append(AgentMessage(role: .toolResult, text: isError ? "ERROR: \(summary)" : summary))
             onToolResult?(summary, isError)
 
-        case "done", "end", "complete", "turn_end":
+        case "done", "end", "complete", "turn_end", "result":
             if isBusy {
                 isBusy = false
                 if let result = json["result"] as? String ?? data["text"] as? String, !result.isEmpty {
