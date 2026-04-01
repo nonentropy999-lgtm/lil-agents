@@ -24,6 +24,7 @@ class GeminiSession: AgentSession {
     // MARK: - Lifecycle
 
     func start() {
+        DebugLog.write("GeminiSession.start cached=\(Self.binaryPath != nil)")
         if Self.binaryPath != nil {
             isRunning = true
             onSessionReady?()
@@ -40,11 +41,13 @@ class GeminiSession: AgentSession {
         ]) { [weak self] path in
             guard let self = self else { return }
             if let binaryPath = path {
+                DebugLog.write("GeminiSession.binaryPath=\(binaryPath)")
                 Self.binaryPath = binaryPath
                 self.isRunning = true
                 self.onSessionReady?()
                 self.flushPendingMessages()
             } else {
+                DebugLog.write("GeminiSession.binaryPath not found")
                 let msg = "Gemini CLI not found.\n\n\(AgentProvider.gemini.installInstructions)"
                 self.onError?(msg)
                 self.history.append(AgentMessage(role: .error, text: msg))
@@ -54,9 +57,11 @@ class GeminiSession: AgentSession {
 
     func send(message: String) {
         guard isRunning, let binaryPath = Self.binaryPath else {
+            DebugLog.write("GeminiSession.queue message because not ready: \(message)")
             pendingMessages.append(message)
             return
         }
+        DebugLog.write("GeminiSession.send cwd=\(WorkspaceSettings.currentURL.path) message=\(message)")
         isBusy = true
         history.append(AgentMessage(role: .user, text: message))
         lineBuffer = ""
@@ -72,6 +77,7 @@ class GeminiSession: AgentSession {
             args = ["--yolo", "--resume", "latest", "--output-format", "stream-json", "--prompt", message]
         }
         proc.arguments = args
+        DebugLog.write("GeminiSession.args=\(args.joined(separator: " "))")
 
         proc.currentDirectoryURL = WorkspaceSettings.currentURL
         proc.environment = ShellEnvironment.processEnvironment(extraPaths: [
@@ -89,6 +95,7 @@ class GeminiSession: AgentSession {
         proc.terminationHandler = { [weak self] _ in
             DispatchQueue.main.async {
                 guard let self = self else { return }
+                DebugLog.write("GeminiSession.termination busy=\(self.isBusy) didReceiveJson=\(self.didReceiveJsonLine)")
                 self.process = nil
 
                 let text = collectedText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -114,6 +121,7 @@ class GeminiSession: AgentSession {
             if let text = String(data: data, encoding: .utf8) {
                 DispatchQueue.main.async {
                     guard let self = self else { return }
+                    DebugLog.write("GeminiSession.stdout=\(text.replacingOccurrences(of: "\n", with: "\\n"))")
                     collectedText += text
                     // Try to parse as JSONL first, fall back to streaming plain text
                     self.processOutput(text)
@@ -139,6 +147,7 @@ class GeminiSession: AgentSession {
                                       trimmed.hasPrefix("Loaded cached credentials.")
                 if !isProgressNoise {
                     DispatchQueue.main.async {
+                        DebugLog.write("GeminiSession.stderr=\(text.replacingOccurrences(of: "\n", with: "\\n"))")
                         self?.onError?(text)
                     }
                 }
@@ -147,11 +156,13 @@ class GeminiSession: AgentSession {
 
         do {
             try proc.run()
+            DebugLog.write("GeminiSession.process launched")
             process = proc
             outputPipe = outPipe
             errorPipe = errPipe
             isFirstTurn = false
         } catch {
+            DebugLog.write("GeminiSession.launch failed: \(error.localizedDescription)")
             isBusy = false
             let msg = "Failed to launch Gemini CLI: \(error.localizedDescription)"
             onError?(msg)
@@ -172,6 +183,7 @@ class GeminiSession: AgentSession {
     private func flushPendingMessages() {
         let queued = pendingMessages
         pendingMessages.removeAll()
+        DebugLog.write("GeminiSession.flushPending count=\(queued.count)")
         for message in queued {
             send(message: message)
         }
