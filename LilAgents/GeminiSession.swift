@@ -8,6 +8,7 @@ class GeminiSession: AgentSession {
     private(set) var isRunning = false
     private(set) var isBusy = false
     private var isFirstTurn = true
+    private var pendingMessages: [String] = []
     private static var binaryPath: String?
 
     var onText: ((String) -> Void)?
@@ -26,6 +27,7 @@ class GeminiSession: AgentSession {
         if Self.binaryPath != nil {
             isRunning = true
             onSessionReady?()
+            flushPendingMessages()
             return
         }
 
@@ -41,6 +43,7 @@ class GeminiSession: AgentSession {
                 Self.binaryPath = binaryPath
                 self.isRunning = true
                 self.onSessionReady?()
+                self.flushPendingMessages()
             } else {
                 let msg = "Gemini CLI not found.\n\n\(AgentProvider.gemini.installInstructions)"
                 self.onError?(msg)
@@ -50,7 +53,10 @@ class GeminiSession: AgentSession {
     }
 
     func send(message: String) {
-        guard isRunning, let binaryPath = Self.binaryPath else { return }
+        guard isRunning, let binaryPath = Self.binaryPath else {
+            pendingMessages.append(message)
+            return
+        }
         isBusy = true
         history.append(AgentMessage(role: .user, text: message))
         lineBuffer = ""
@@ -128,7 +134,9 @@ class GeminiSession: AgentSession {
                                       trimmed.hasPrefix("⠸") || trimmed.hasPrefix("⠼") ||
                                       trimmed.hasPrefix("⠴") || trimmed.hasPrefix("⠦") ||
                                       trimmed.hasPrefix("⠧") || trimmed.hasPrefix("⠇") ||
-                                      trimmed.hasPrefix("⠏") || trimmed.isEmpty
+                                      trimmed.hasPrefix("⠏") || trimmed.isEmpty ||
+                                      trimmed.hasPrefix("YOLO mode is enabled.") ||
+                                      trimmed.hasPrefix("Loaded cached credentials.")
                 if !isProgressNoise {
                     DispatchQueue.main.async {
                         self?.onError?(text)
@@ -158,6 +166,15 @@ class GeminiSession: AgentSession {
         process = nil
         isRunning = false
         isBusy = false
+        pendingMessages.removeAll()
+    }
+
+    private func flushPendingMessages() {
+        let queued = pendingMessages
+        pendingMessages.removeAll()
+        for message in queued {
+            send(message: message)
+        }
     }
 
     // MARK: - Output Parsing

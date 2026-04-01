@@ -7,6 +7,7 @@ class CodexSession: AgentSession {
     private var lineBuffer = ""
     private(set) var isRunning = false
     private(set) var isBusy = false
+    private var pendingMessages: [String] = []
     private static var binaryPath: String?
 
     var onText: ((String) -> Void)?
@@ -25,6 +26,7 @@ class CodexSession: AgentSession {
         if let cached = Self.binaryPath {
             isRunning = true
             onSessionReady?()
+            flushPendingMessages()
             return
         }
 
@@ -44,11 +46,15 @@ class CodexSession: AgentSession {
             Self.binaryPath = binaryPath
             self.isRunning = true
             self.onSessionReady?()
+            self.flushPendingMessages()
         }
     }
 
     func send(message: String) {
-        guard isRunning, let binaryPath = Self.binaryPath else { return }
+        guard isRunning, let binaryPath = Self.binaryPath else {
+            pendingMessages.append(message)
+            return
+        }
         isBusy = true
         history.append(AgentMessage(role: .user, text: message))
         lineBuffer = ""
@@ -127,6 +133,15 @@ class CodexSession: AgentSession {
         process = nil
         isRunning = false
         isBusy = false
+        pendingMessages.removeAll()
+    }
+
+    private func flushPendingMessages() {
+        let queued = pendingMessages
+        pendingMessages.removeAll()
+        for message in queued {
+            send(message: message)
+        }
     }
 
     // MARK: - Prompt (multi-turn without codex exec resume)
