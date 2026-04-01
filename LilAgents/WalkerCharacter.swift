@@ -197,13 +197,13 @@ class WalkerCharacter {
             createPopoverWindow()
         }
 
-        // Show static welcome message instead of Claude terminal
+        // Show static welcome message instead of opening a live session immediately.
         terminalView?.inputField.isEditable = false
         terminalView?.inputField.placeholderString = ""
         let welcome = """
-        hey! we're bruce and jazz — your lil dock agents.
+        hey! we're bruce and jazz — your dock agents.
 
-        click either of us to open a Claude AI chat. we'll walk around while you work and let you know when Claude's thinking.
+        click either of us to open a Gemini or Codex chat. we'll walk around while you work and let you know when your agent's thinking.
 
         check the menu bar icon (top right) for themes, sounds, and more options.
 

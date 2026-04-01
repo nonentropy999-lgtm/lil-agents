@@ -1,0 +1,48 @@
+name: Build Travis Agents
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - codex/travis-edition
+
+jobs:
+  build-macos-app:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project lil-agents.xcodeproj
+
+      - name: Build Release app
+        run: |
+          xcodebuild \
+            -project lil-agents.xcodeproj \
+            -scheme LilAgents \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            "build/Build/Products/Release/Travis Agents.app" \
+            "dist/Travis-Agents-macOS.zip"
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Travis-Agents-macOS
+          path: dist/Travis-Agents-macOS.zip
+          if-no-files-found: error

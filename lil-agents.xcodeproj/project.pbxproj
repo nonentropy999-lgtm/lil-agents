@@ -14,16 +14,14 @@
 		A10000010000000000000010 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000010 /* Sounds */; };
 		A10000010000000000000020 /* PopoverTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000020 /* PopoverTheme.swift */; };
 		A10000010000000000000021 /* CharacterContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000021 /* CharacterContentView.swift */; };
-		A10000010000000000000022 /* ClaudeSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000022 /* ClaudeSession.swift */; };
 		A10000010000000000000023 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000023 /* TerminalView.swift */; };
 		A10000010000000000000024 /* WalkerCharacter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000024 /* WalkerCharacter.swift */; };
 		A10000010000000000000025 /* LilAgentsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000025 /* LilAgentsController.swift */; };
-		A10000010000000000000030 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000B000000000000002 /* Sparkle */; };
 		A10000010000000000000031 /* AgentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000030 /* AgentSession.swift */; };
 		A10000010000000000000032 /* ShellEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000031 /* ShellEnvironment.swift */; };
 		A10000010000000000000033 /* CodexSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000032 /* CodexSession.swift */; };
-		A10000010000000000000034 /* CopilotSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000033 /* CopilotSession.swift */; };
 		A10000010000000000000035 /* GeminiSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000034 /* GeminiSession.swift */; };
+		A10000010000000000000036 /* WorkspaceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000035 /* WorkspaceSettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,7 +43,8 @@
 		A10000020000000000000032 /* CodexSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexSession.swift; sourceTree = "<group>"; };
 		A10000020000000000000033 /* CopilotSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotSession.swift; sourceTree = "<group>"; };
 		A10000020000000000000034 /* GeminiSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSession.swift; sourceTree = "<group>"; };
-		A10000030000000000000001 /* lil agents.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "lil agents.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000020000000000000035 /* WorkspaceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSettings.swift; sourceTree = "<group>"; };
+		A10000030000000000000001 /* Travis Agents.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Travis Agents.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,7 +52,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000010000000000000030 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +74,7 @@
 				A10000020000000000000021 /* CharacterContentView.swift */,
 				A10000020000000000000030 /* AgentSession.swift */,
 				A10000020000000000000031 /* ShellEnvironment.swift */,
+				A10000020000000000000035 /* WorkspaceSettings.swift */,
 				A10000020000000000000022 /* ClaudeSession.swift */,
 				A10000020000000000000032 /* CodexSession.swift */,
 				A10000020000000000000033 /* CopilotSession.swift */,
@@ -96,7 +95,7 @@
 		A10000050000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A10000030000000000000001 /* lil agents.app */,
+				A10000030000000000000001 /* Travis Agents.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,10 +117,9 @@
 			);
 			name = LilAgents;
 			packageProductDependencies = (
-				A1000000B000000000000002 /* Sparkle */,
 			);
 			productName = LilAgents;
-			productReference = A10000030000000000000001 /* lil agents.app */;
+			productReference = A10000030000000000000001 /* Travis Agents.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -149,7 +147,6 @@
 			);
 			mainGroup = A10000050000000000000001;
 			packageReferences = (
-				A1000000B000000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			productRefGroup = A10000050000000000000003 /* Products */;
 			projectDirPath = "";
@@ -184,9 +181,8 @@
 				A10000010000000000000021 /* CharacterContentView.swift in Sources */,
 				A10000010000000000000031 /* AgentSession.swift in Sources */,
 				A10000010000000000000032 /* ShellEnvironment.swift in Sources */,
-				A10000010000000000000022 /* ClaudeSession.swift in Sources */,
+				A10000010000000000000036 /* WorkspaceSettings.swift in Sources */,
 				A10000010000000000000033 /* CodexSession.swift in Sources */,
-				A10000010000000000000034 /* CopilotSession.swift in Sources */,
 				A10000010000000000000035 /* GeminiSession.swift in Sources */,
 				A10000010000000000000023 /* TerminalView.swift in Sources */,
 				A10000010000000000000024 /* WalkerCharacter.swift in Sources */,
@@ -315,7 +311,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LilAgents/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "lil agents";
+				INFOPLIST_KEY_CFBundleDisplayName = "Travis Agents";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSMainNibFile = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -324,8 +320,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lilagents.app;
-				PRODUCT_NAME = "lil agents";
+				PRODUCT_BUNDLE_IDENTIFIER = com.nonentropy999.lgtm.travisagents;
+				PRODUCT_NAME = "Travis Agents";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -343,7 +339,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LilAgents/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "lil agents";
+				INFOPLIST_KEY_CFBundleDisplayName = "Travis Agents";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSMainNibFile = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -353,8 +349,8 @@
 				);
 				MARKETING_VERSION = 1.1.1;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lilagents.app;
-				PRODUCT_NAME = "lil agents";
+				PRODUCT_BUNDLE_IDENTIFIER = com.nonentropy999.lgtm.travisagents;
+				PRODUCT_NAME = "Travis Agents";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -383,24 +379,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		A1000000B000000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.6.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		A1000000B000000000000002 /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A1000000B000000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10000090000000000000001 /* Project object */;
 }

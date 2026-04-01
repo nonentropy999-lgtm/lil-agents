@@ -192,7 +192,7 @@ class TerminalView: NSView {
         case "/help":
             let t = theme
             let help = NSMutableAttributedString()
-            help.append(NSAttributedString(string: "  lil agents — slash commands\n",
+            help.append(NSAttributedString(string: "  Travis Agents — slash commands\n",
                 attributes: [.font: t.fontBold, .foregroundColor: t.accentColor]))
             help.append(NSAttributedString(string: "  /clear  ", attributes: [.font: t.fontBold, .foregroundColor: t.textPrimary]))
             help.append(NSAttributedString(string: "clear chat history\n", attributes: [.font: t.font, .foregroundColor: t.textDim]))

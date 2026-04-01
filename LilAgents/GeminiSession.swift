@@ -66,7 +66,7 @@ class GeminiSession: AgentSession {
         }
         proc.arguments = args
 
-        proc.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
+        proc.currentDirectoryURL = WorkspaceSettings.currentURL
         proc.environment = ShellEnvironment.processEnvironment(extraPaths: [
             FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".npm-global/bin").path,
             FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".local/bin").path

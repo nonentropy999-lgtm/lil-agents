@@ -3,14 +3,14 @@ import Foundation
 // MARK: - Provider
 
 enum AgentProvider: String, CaseIterable {
-    case claude, codex, copilot, gemini
+    case gemini, codex
 
     private static let defaultsKey = "selectedProvider"
 
     static var current: AgentProvider {
         get {
-            let raw = UserDefaults.standard.string(forKey: defaultsKey) ?? "claude"
-            return AgentProvider(rawValue: raw) ?? .claude
+            let raw = UserDefaults.standard.string(forKey: defaultsKey) ?? AgentProvider.gemini.rawValue
+            return AgentProvider(rawValue: raw) ?? .gemini
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: defaultsKey)
@@ -19,10 +19,8 @@ enum AgentProvider: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .claude:  return "Claude"
-        case .codex:   return "Codex"
-        case .copilot: return "Copilot"
-        case .gemini:  return "Gemini"
+        case .gemini: return "Gemini"
+        case .codex:  return "Codex"
         }
     }
 
@@ -41,23 +39,17 @@ enum AgentProvider: String, CaseIterable {
 
     var installInstructions: String {
         switch self {
-        case .claude:
-            return "To install, run this in Terminal:\n  curl -fsSL https://claude.ai/install.sh | sh\n\nOr download from https://claude.ai/download"
-        case .codex:
-            return "To install, run this in Terminal:\n  npm install -g @openai/codex"
-        case .copilot:
-            return "To install, run this in Terminal:\n  brew install copilot-cli\n\nOr: npm install -g @github/copilot-cli"
         case .gemini:
             return "To install, run this in Terminal:\n  npm install -g @google/gemini-cli\n\nThen authenticate:\n  gemini auth"
+        case .codex:
+            return "To install, run this in Terminal:\n  npm install -g @openai/codex"
         }
     }
 
     func createSession() -> any AgentSession {
         switch self {
-        case .claude:  return ClaudeSession()
-        case .codex:   return CodexSession()
-        case .copilot: return CopilotSession()
-        case .gemini:  return GeminiSession()
+        case .gemini: return GeminiSession()
+        case .codex:  return CodexSession()
         }
     }
 }
@@ -67,7 +59,7 @@ enum AgentProvider: String, CaseIterable {
 enum TitleFormat {
     case uppercase       // "CLAUDE"
     case lowercaseTilde  // "claude ~"
-    case capitalized     // "Claude"
+    case capitalized     // "Gemini"
 }
 
 // MARK: - Message

@@ -61,7 +61,7 @@ class CodexSession: AgentSession {
 
         proc.arguments = ["exec", "--json", "--full-auto", "--skip-git-repo-check", prompt]
 
-        proc.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
+        proc.currentDirectoryURL = WorkspaceSettings.currentURL
         proc.environment = ShellEnvironment.processEnvironment(extraPaths: [
             FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".npm-global/bin").path
         ])

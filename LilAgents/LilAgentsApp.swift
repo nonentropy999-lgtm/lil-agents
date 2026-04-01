@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import Sparkle
 
 @main
 struct LilAgentsApp: App {
@@ -14,7 +13,6 @@ struct LilAgentsApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var controller: LilAgentsController?
     var statusItem: NSStatusItem?
-    let updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -32,7 +30,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem?.button {
-            button.image = NSImage(named: "MenuBarIcon") ?? NSImage(systemSymbolName: "figure.walk", accessibilityDescription: "lil agents")
+            button.image = NSImage(named: "MenuBarIcon") ?? NSImage(systemSymbolName: "figure.walk", accessibilityDescription: "Travis Agents")
         }
 
         let menu = NSMenu()
@@ -96,9 +94,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
-        updateItem.target = updaterController
-        menu.addItem(updateItem)
+        let workspaceItem = NSMenuItem(title: "Workspace: \(WorkspaceSettings.displayName)", action: nil, keyEquivalent: "")
+        let workspaceMenu = NSMenu()
+        let chooseWorkspaceItem = NSMenuItem(title: "Choose Folder…", action: #selector(chooseWorkspace), keyEquivalent: "")
+        chooseWorkspaceItem.target = self
+        workspaceMenu.addItem(chooseWorkspaceItem)
+        let resetWorkspaceItem = NSMenuItem(title: "Use Home Folder", action: #selector(resetWorkspace), keyEquivalent: "")
+        resetWorkspaceItem.target = self
+        resetWorkspaceItem.state = WorkspaceSettings.displayName == "Home" ? .on : .off
+        workspaceMenu.addItem(resetWorkspaceItem)
+        workspaceItem.submenu = workspaceMenu
+        menu.addItem(workspaceItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -181,6 +187,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @objc func chooseWorkspace(_ sender: NSMenuItem) {
+        guard let url = WorkspaceSettings.chooseWorkspace() else { return }
+        WorkspaceSettings.currentURL = url
+        refreshWorkspaceMenu()
+        resetSessionsForWorkspaceChange()
+    }
+
+    @objc func resetWorkspace(_ sender: NSMenuItem) {
+        WorkspaceSettings.resetToHome()
+        refreshWorkspaceMenu()
+        resetSessionsForWorkspaceChange()
+    }
+
     @objc func toggleChar1(_ sender: NSMenuItem) {
         guard let chars = controller?.characters, chars.count > 0 else { return }
         let char = chars[0]
@@ -219,6 +238,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleSounds(_ sender: NSMenuItem) {
         WalkerCharacter.soundsEnabled.toggle()
         sender.state = WalkerCharacter.soundsEnabled ? .on : .off
+    }
+
+    private func refreshWorkspaceMenu() {
+        guard let menu = statusItem?.menu else { return }
+        if let workspaceItem = menu.items.first(where: { $0.title.hasPrefix("Workspace:") }) {
+            workspaceItem.title = "Workspace: \(WorkspaceSettings.displayName)"
+            if let resetItem = workspaceItem.submenu?.items.last {
+                resetItem.state = WorkspaceSettings.displayName == "Home" ? .on : .off
+            }
+        }
+    }
+
+    private func resetSessionsForWorkspaceChange() {
+        controller?.characters.forEach { char in
+            char.session?.terminate()
+            char.session = nil
+            if char.isIdleForPopover {
+                char.closePopover()
+            }
+            char.popoverWindow?.orderOut(nil)
+            char.popoverWindow = nil
+            char.terminalView = nil
+            char.thinkingBubbleWindow?.orderOut(nil)
+            char.thinkingBubbleWindow = nil
+        }
     }
 
     @objc func quitApp() {
