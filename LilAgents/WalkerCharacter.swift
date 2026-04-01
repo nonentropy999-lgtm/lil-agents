@@ -64,6 +64,7 @@ class WalkerCharacter {
     private var dragStartScreenPoint: NSPoint?
     private var manualPlacementOrigin: NSPoint?
     private var hasManualPlacement = false
+    private let manualPlacementTravelDistance: CGFloat = 160
 
     init(videoName: String) {
         self.videoName = videoName
@@ -259,6 +260,7 @@ class WalkerCharacter {
 
         if didDragCharacter {
             if let origin = manualPlacementOrigin {
+                positionProgress = 0.5
                 saveManualPlacementOrigin(origin)
             }
             return
@@ -892,7 +894,22 @@ class WalkerCharacter {
     // MARK: - Frame Update
 
     func update(dockX: CGFloat, dockWidth: CGFloat, dockTopY: CGFloat) {
-        if hasManualPlacement || isDraggingCharacter {
+        let isManualMode = hasManualPlacement && manualPlacementOrigin != nil
+        let effectiveTravelDistance = isManualMode ? manualPlacementTravelDistance : max(dockWidth - displayWidth, 0)
+        currentTravelDistance = effectiveTravelDistance
+
+        let baseX: CGFloat
+        let baseY: CGFloat
+        if let manualOrigin = manualPlacementOrigin, isManualMode {
+            baseX = manualOrigin.x - (effectiveTravelDistance * 0.5)
+            baseY = manualOrigin.y
+        } else {
+            let bottomPadding = displayHeight * 0.15
+            baseX = dockX
+            baseY = dockTopY - bottomPadding + yOffset
+        }
+
+        if isDraggingCharacter {
             if let manualOrigin = manualPlacementOrigin {
                 window.setFrameOrigin(manualOrigin)
             }
@@ -903,12 +920,9 @@ class WalkerCharacter {
             return
         }
 
-        currentTravelDistance = max(dockWidth - displayWidth, 0)
         if isIdleForPopover {
-            let travelDistance = currentTravelDistance
-            let x = dockX + travelDistance * positionProgress + currentFlipCompensation
-            let bottomPadding = displayHeight * 0.15
-            let y = dockTopY - bottomPadding + yOffset
+            let x = baseX + effectiveTravelDistance * positionProgress + currentFlipCompensation
+            let y = baseY
             window.setFrameOrigin(NSPoint(x: x, y: y))
             updatePopoverPosition()
             updateThinkingBubble()
@@ -921,10 +935,8 @@ class WalkerCharacter {
             if now >= pauseEndTime {
                 startWalk()
             } else {
-                let travelDistance = max(dockWidth - displayWidth, 0)
-                let x = dockX + travelDistance * positionProgress + currentFlipCompensation
-                let bottomPadding = displayHeight * 0.15
-                let y = dockTopY - bottomPadding + yOffset
+                let x = baseX + effectiveTravelDistance * positionProgress + currentFlipCompensation
+                let y = baseY
                 window.setFrameOrigin(NSPoint(x: x, y: y))
                 return
             }
@@ -933,7 +945,7 @@ class WalkerCharacter {
         if isWalking {
             let elapsed = now - walkStartTime
             let videoTime = min(elapsed, videoDuration)
-            let travelDistance = currentTravelDistance
+            let travelDistance = effectiveTravelDistance
 
             // Interpolate in pixel space for consistent speed across screen changes
             let walkNorm = elapsed >= videoDuration ? 1.0 : movementPosition(at: videoTime)
@@ -950,9 +962,8 @@ class WalkerCharacter {
                 return
             }
 
-            let x = dockX + travelDistance * positionProgress + currentFlipCompensation
-            let bottomPadding = displayHeight * 0.15
-            let y = dockTopY - bottomPadding + yOffset
+            let x = baseX + travelDistance * positionProgress + currentFlipCompensation
+            let y = baseY
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
