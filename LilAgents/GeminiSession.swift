@@ -9,6 +9,7 @@ class GeminiSession: AgentSession {
     private(set) var isBusy = false
     private var isFirstTurn = true
     private var pendingMessages: [String] = []
+    private var assistantResponseBuffer = ""
     private static var binaryPath: String?
 
     var onText: ((String) -> Void)?
@@ -66,6 +67,7 @@ class GeminiSession: AgentSession {
         history.append(AgentMessage(role: .user, text: message))
         lineBuffer = ""
         didReceiveJsonLine = false
+        assistantResponseBuffer = ""
 
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: binaryPath)
@@ -99,7 +101,13 @@ class GeminiSession: AgentSession {
                 self.process = nil
 
                 let text = collectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !text.isEmpty && self.isBusy && !self.didReceiveJsonLine {
+                if !self.assistantResponseBuffer.isEmpty {
+                    let finalText = self.assistantResponseBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !finalText.isEmpty {
+                        self.history.append(AgentMessage(role: .assistant, text: finalText))
+                        self.onText?(finalText)
+                    }
+                } else if !text.isEmpty && self.isBusy && !self.didReceiveJsonLine {
                     // If we got text that wasn't streamed yet (non-streaming fallback)
                     let alreadyStreamed = self.history.last?.role == .assistant
                     if !alreadyStreamed {
@@ -231,7 +239,8 @@ class GeminiSession: AgentSession {
             let role = data["role"] as? String ?? json["role"] as? String ?? "assistant"
             let text = data["text"] as? String ?? data["content"] as? String ?? json["text"] as? String ?? ""
             if role == "assistant", !text.isEmpty {
-                onText?(text)
+                assistantResponseBuffer += text
+                DebugLog.write("GeminiSession.assistantBuffer=\(assistantResponseBuffer)")
             }
 
         case "tool_call", "function_call":
@@ -250,8 +259,10 @@ class GeminiSession: AgentSession {
         case "done", "end", "complete", "turn_end", "result":
             if isBusy {
                 isBusy = false
-                if let result = json["result"] as? String ?? data["text"] as? String, !result.isEmpty {
-                    history.append(AgentMessage(role: .assistant, text: result))
+                if assistantResponseBuffer.isEmpty,
+                   let result = json["result"] as? String ?? data["text"] as? String,
+                   !result.isEmpty {
+                    assistantResponseBuffer = result
                 }
                 onTurnComplete?()
             }
