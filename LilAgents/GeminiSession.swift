@@ -258,12 +258,18 @@ class GeminiSession: AgentSession {
 
         case "done", "end", "complete", "turn_end", "result":
             if isBusy {
-                isBusy = false
                 if assistantResponseBuffer.isEmpty,
                    let result = json["result"] as? String ?? data["text"] as? String,
                    !result.isEmpty {
                     assistantResponseBuffer = result
                 }
+                let finalText = assistantResponseBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !finalText.isEmpty {
+                    history.append(AgentMessage(role: .assistant, text: finalText))
+                    onText?(finalText)
+                    assistantResponseBuffer = ""
+                }
+                isBusy = false
                 onTurnComplete?()
             }
 
