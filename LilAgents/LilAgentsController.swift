@@ -68,6 +68,10 @@ class LilAgentsController {
         characters.forEach { $0.isOnboarding = false }
     }
 
+    func resetCharacterPlacements() {
+        characters.forEach { $0.resetManualPlacement() }
+    }
+
     // MARK: - Debug
 
     private func setupDebugLine() {

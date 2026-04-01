@@ -108,6 +108,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        let resetPositionsItem = NSMenuItem(title: "Reset Character Positions", action: #selector(resetCharacterPositions), keyEquivalent: "")
+        resetPositionsItem.target = self
+        menu.addItem(resetPositionsItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         let quitItem = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
         menu.addItem(quitItem)
 
@@ -198,6 +204,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         WorkspaceSettings.resetToHome()
         refreshWorkspaceMenu()
         resetSessionsForWorkspaceChange()
+    }
+
+    @objc func resetCharacterPositions(_ sender: NSMenuItem) {
+        controller?.resetCharacterPlacements()
     }
 
     @objc func toggleChar1(_ sender: NSMenuItem) {

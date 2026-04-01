@@ -58,6 +58,12 @@ class WalkerCharacter {
     private var environmentHiddenAt: CFTimeInterval?
     private var wasPopoverVisibleBeforeEnvironmentHide = false
     private var wasBubbleVisibleBeforeEnvironmentHide = false
+    private var isDraggingCharacter = false
+    private var didDragCharacter = false
+    private var dragStartWindowOrigin: NSPoint?
+    private var dragStartScreenPoint: NSPoint?
+    private var manualPlacementOrigin: NSPoint?
+    private var hasManualPlacement = false
 
     init(videoName: String) {
         self.videoName = videoName
@@ -85,7 +91,12 @@ class WalkerCharacter {
         let bottomPadding = displayHeight * 0.15
         let y = dockTopY - bottomPadding + yOffset
 
-        let contentRect = CGRect(x: 0, y: y, width: displayWidth, height: displayHeight)
+        let defaultOrigin = CGPoint(x: 0, y: y)
+        let restoredOrigin = loadManualPlacementOrigin() ?? defaultOrigin
+        hasManualPlacement = loadManualPlacementOrigin() != nil
+        manualPlacementOrigin = restoredOrigin
+
+        let contentRect = CGRect(x: restoredOrigin.x, y: restoredOrigin.y, width: displayWidth, height: displayHeight)
         window = NSWindow(
             contentRect: contentRect,
             styleMask: .borderless,
@@ -170,6 +181,91 @@ class WalkerCharacter {
     }
 
     // MARK: - Click Handling & Popover
+
+    private var manualPlacementDefaultsKey: String {
+        "manualPlacement.\(videoName)"
+    }
+
+    private func loadManualPlacementOrigin() -> NSPoint? {
+        guard let stored = UserDefaults.standard.dictionary(forKey: manualPlacementDefaultsKey),
+              let x = stored["x"] as? Double,
+              let y = stored["y"] as? Double else {
+            return nil
+        }
+        return NSPoint(x: x, y: y)
+    }
+
+    private func saveManualPlacementOrigin(_ origin: NSPoint) {
+        UserDefaults.standard.set(["x": origin.x, "y": origin.y], forKey: manualPlacementDefaultsKey)
+    }
+
+    func resetManualPlacement() {
+        hasManualPlacement = false
+        manualPlacementOrigin = nil
+        UserDefaults.standard.removeObject(forKey: manualPlacementDefaultsKey)
+        isDraggingCharacter = false
+        didDragCharacter = false
+        dragStartWindowOrigin = nil
+        dragStartScreenPoint = nil
+        let delay = Double.random(in: 1.0...3.0)
+        pauseEndTime = CACurrentMediaTime() + delay
+    }
+
+    func beginPointerInteraction(with event: NSEvent) {
+        dragStartWindowOrigin = window.frame.origin
+        dragStartScreenPoint = window.convertPoint(toScreen: event.locationInWindow)
+        didDragCharacter = false
+        isDraggingCharacter = false
+    }
+
+    func continuePointerInteraction(with event: NSEvent) {
+        guard let startOrigin = dragStartWindowOrigin,
+              let startPoint = dragStartScreenPoint else { return }
+
+        let currentPoint = window.convertPoint(toScreen: event.locationInWindow)
+        let deltaX = currentPoint.x - startPoint.x
+        let deltaY = currentPoint.y - startPoint.y
+
+        if !didDragCharacter && hypot(deltaX, deltaY) < 4 {
+            return
+        }
+
+        didDragCharacter = true
+        isDraggingCharacter = true
+        isWalking = false
+        isPaused = true
+        queuePlayer.pause()
+
+        var newOrigin = NSPoint(x: startOrigin.x + deltaX, y: startOrigin.y + deltaY)
+        if let screen = window.screen ?? NSScreen.main {
+            let frame = screen.visibleFrame
+            newOrigin.x = min(max(newOrigin.x, frame.minX), frame.maxX - displayWidth)
+            newOrigin.y = min(max(newOrigin.y, frame.minY), frame.maxY - displayHeight)
+        }
+
+        hasManualPlacement = true
+        manualPlacementOrigin = newOrigin
+        window.setFrameOrigin(newOrigin)
+        updatePopoverPosition()
+        updateThinkingBubble()
+    }
+
+    func endPointerInteraction(with event: NSEvent) {
+        defer {
+            dragStartWindowOrigin = nil
+            dragStartScreenPoint = nil
+            isDraggingCharacter = false
+        }
+
+        if didDragCharacter {
+            if let origin = manualPlacementOrigin {
+                saveManualPlacementOrigin(origin)
+            }
+            return
+        }
+
+        handleClick()
+    }
 
     func handleClick() {
         if isOnboarding {
@@ -796,6 +892,17 @@ class WalkerCharacter {
     // MARK: - Frame Update
 
     func update(dockX: CGFloat, dockWidth: CGFloat, dockTopY: CGFloat) {
+        if hasManualPlacement || isDraggingCharacter {
+            if let manualOrigin = manualPlacementOrigin {
+                window.setFrameOrigin(manualOrigin)
+            }
+            if isIdleForPopover {
+                updatePopoverPosition()
+            }
+            updateThinkingBubble()
+            return
+        }
+
         currentTravelDistance = max(dockWidth - displayWidth, 0)
         if isIdleForPopover {
             let travelDistance = currentTravelDistance

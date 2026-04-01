@@ -55,6 +55,14 @@ class CharacterContentView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
-        character?.handleClick()
+        character?.beginPointerInteraction(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        character?.continuePointerInteraction(with: event)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        character?.endPointerInteraction(with: event)
     }
 }
